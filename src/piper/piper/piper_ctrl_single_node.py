@@ -143,7 +143,7 @@ class PiperRosNode(Node):
         joint_3: float = (self.piper.GetArmJointMsgs().joint_state.joint_4 / 1000) * 0.017444
         joint_4: float = (self.piper.GetArmJointMsgs().joint_state.joint_5 / 1000) * 0.017444
         joint_5: float = (self.piper.GetArmJointMsgs().joint_state.joint_6 / 1000) * 0.017444
-        joint_6: float = self.piper.GetArmGripperMsgs().gripper_state.grippers_angle / 1000000
+        gripper_joint: float = self.piper.GetArmGripperMsgs().gripper_state.grippers_angle / 1000000
         vel_0: float = self.piper.GetArmHighSpdInfoMsgs().motor_1.motor_speed / 1000
         vel_1: float = self.piper.GetArmHighSpdInfoMsgs().motor_2.motor_speed / 1000
         vel_2: float = self.piper.GetArmHighSpdInfoMsgs().motor_3.motor_speed / 1000
@@ -151,7 +151,7 @@ class PiperRosNode(Node):
         vel_4: float = self.piper.GetArmHighSpdInfoMsgs().motor_5.motor_speed / 1000
         vel_5: float = self.piper.GetArmHighSpdInfoMsgs().motor_6.motor_speed / 1000
         effort_6: float = self.piper.GetArmGripperMsgs().gripper_state.grippers_effort / 1000
-        self.joint_states.position = [joint_0, joint_1, joint_2, joint_3, joint_4, joint_5, joint_6]  # Example values
+        self.joint_states.position = [joint_0, joint_1, joint_2, joint_3, joint_4, joint_5, gripper_joint]  # Example values
         self.joint_states.velocity = [vel_0, vel_1, vel_2, vel_3, vel_4, vel_5, 0.0]  # Example values
         self.joint_states.effort = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, effort_6]
         self.joint_pub.publish(self.joint_states)
@@ -228,10 +228,10 @@ class PiperRosNode(Node):
         joint_3 = round(joint_data.position[3] * factor)
         joint_4 = round(joint_data.position[4] * factor)
         joint_5 = round(joint_data.position[5] * factor)
-        joint_6 = round(joint_data.position[6] * 1000 * 1000)
+        gripper_joint = round(joint_data.position[6] * 1000 * 1000)
         if self.rviz_ctrl_flag:
-            joint_6 = joint_6 * 2
-        joint_6 = clip(joint_6, 0, 80000)
+            gripper_joint = gripper_joint * 2
+        gripper_joint = clip(gripper_joint, 0, 80000)
         if self.GetEnableFlag():
             # Set motor speed
             if joint_data.velocity:
@@ -255,9 +255,9 @@ class PiperRosNode(Node):
                     gripper_effort = clip(joint_data.effort[6], 0.5, 3)
                     self.get_logger().info(f"gripper_effort: {gripper_effort}")
                     gripper_effort = round(gripper_effort * 1000)
-                    self.piper.GripperCtrl(abs(joint_6), gripper_effort, 0x01, 0)
+                    self.piper.GripperCtrl(abs(gripper_joint), gripper_effort, 0x01, 0)
                 else:
-                    self.piper.GripperCtrl(abs(joint_6), 1000, 0x01, 0)
+                    self.piper.GripperCtrl(abs(gripper_joint), 1000, 0x01, 0)
 
     def enable_callback(self, enable_flag: Bool):
         """Callback function for enabling the robotic arm
